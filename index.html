@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>PSA Card Price Template – Instagram</title>
+    <!-- html2canvas for exporting to image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #111827;
+            color: #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .app-wrapper {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        /* --- Left: form controls (not in final image) --- */
+        .controls {
+            width: 360px;
+            background: #020617;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #1f2937;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .controls h1 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+
+        .controls h2 {
+            font-size: 0.95rem;
+            margin: 16px 0 8px;
+            color: #e5e7eb;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: #9ca3af;
+        }
+
+        .field input[type="text"],
+        .field input[type="date"],
+        .field input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        .field input[type="file"] {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .btn {
+            margin-top: 8px;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #020617;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        small {
+            display: block;
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .trend-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr auto;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+
+        .trend-row button {
+            border-radius: 999px;
+            border: none;
+            padding: 4px 8px;
+            background: #1f2937;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .trend-row button:hover {
+            background: #374151;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            margin-top: 4px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #030712;
+        }
+
+        /* --- Right: the template that gets exported --- */
+        /*
+      On-screen size: 540 x 675
+      Exported at scale: 2 => 1080 x 1350 (perfect IG 4:5)
+      Margins wanted in final image: 150 top/bottom, 55 left/right
+      => padding: 75 top/bottom, 27.5 left/right at scale=1
+    */
+        #capture-area {
+            width: 540px;
+            height: 675px;
+            border-radius: 20px;
+            background: #020617;
+            /* base if no BG image */
+            padding: 75px 27.5px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Background image uploaded by user (bottom layer) */
+        .bg-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Overlay image (top layer) */
+        .overlay-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .card-layout {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            /* exactly fills the inner area */
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Top area: image + main info */
+        .top-row {
+            flex: 0 0 280px;
+            /* ~280px tall block */
+            display: flex;
+            gap: 16px;
+            min-height: 0;
+        }
+
+        .card-image-wrapper {
+            flex: 0 0 40%;
+            border-radius: 16px;
+            background: rgba(2, 6, 23, 0.9);
+            border: 1px solid #1f2937;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-image-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+            background: #020617;
+        }
+
+        .card-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 18px 20px;
+            /* more breathing room */
+            min-width: 0;
+            background: linear-gradient(135deg,
+                    rgba(15, 23, 42, 0.96),
+                    rgba(2, 6, 23, 0.96));
+            border-radius: 16px;
+            border: 1px solid #1f2937;
+        }
+
+        .card-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .brand {
+            font-size: 0.75rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f9fafb;
+            line-height: 1.1;
+            word-break: break-word;
+        }
+
+        .card-sub {
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        .rarity-line {
+            font-size: 0.85rem;
+            color: #e5e7eb;
+            margin-top: 4px;
+        }
+
+        .price-block {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid #22c55e33;
+            background: radial-gradient(circle at top left, #052e16 0, #020617 50%, #020617 100%);
+        }
+
+        .price-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #86efac;
+            margin-bottom: 4px;
+        }
+
+        .price-value {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #bbf7d0;
+            line-height: 1.1;
+        }
+
+        .price-footer {
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Bottom section: fixed height, clips anything extra */
+        .bottom-row {
+            border-radius: 16px;
+            border: 1px solid #1f2937;
+            background: rgba(2, 6, 23, 0.95);
+            padding: 10px 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .bottom-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .bottom-title {
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .bottom-caption {
+            font-size: 0.7rem;
+            color: #6b7280;
+        }
+
+        #chartWrapper {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+
+        /* canvas always matches wrapper size visually */
+        #priceChart {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background: #020617;
+            display: block;
+        }
+
+        .footer-note {
+            font-size: 0.7rem;
+            color: #4b5563;
+            text-align: right;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-wrapper">
+        <!-- Controls (inputs) -->
+        <div class="controls">
+            <h1>PSA Price Card Builder</h1>
+
+            <!-- Basic info -->
+            <h2>Card Info</h2>
+            <div class="field">
+                <label for="cardName">Card name</label>
+                <input id="cardName" type="text" placeholder="e.g. Zekrom ex">
+            </div>
+
+            <div class="field">
+                <label for="cardSet">Set / Year</label>
+                <input id="cardSet" type="text" placeholder="e.g. 2025 Pokemon SV11B JP">
+            </div>
+
+            <div class="field">
+                <label for="grade">Grade</label>
+                <input id="grade" type="text" placeholder="e.g. PSA 10 GEM MT">
+            </div>
+
+            <div class="field">
+                <label for="rarity">Rarity</label>
+                <input id="rarity" type="text" placeholder="e.g. BW RARE">
+            </div>
+
+            <div class="field">
+                <label for="price">Last sold price (USD)</label>
+                <input id="price" type="number" step="0.01" placeholder="e.g. 741.41">
+            </div>
+
+            <div class="field">
+                <label for="dateSold">Last sold date</label>
+                <input id="dateSold" type="date">
+            </div>
+
+            <div class="field">
+                <label for="imageInput">Card image</label>
+                <input id="imageInput" type="file" accept="image/*">
+            </div>
+
+            <div class="field">
+                <label for="bgInput">Background image (optional)</label>
+                <input id="bgInput" type="file" accept="image/*">
+                <small>Goes behind everything (BG).</small>
+            </div>
+
+            <div class="field">
+                <label for="overlayInput">Overlay image (optional)</label>
+                <input id="overlayInput" type="file" accept="image/*">
+                <small>Goes on top of everything (frames, logos, etc.).</small>
+            </div>
+
+            <!-- Trend data -->
+            <h2>Price Trend Points</h2>
+
+            <div id="trendRows"></div>
+            <button type="button" class="btn-secondary" id="addPointBtn">+ Add data point</button>
+
+            <button class="btn" id="downloadBtn">Download as Image (PNG)</button>
+
+        </div>
+
+        <!-- Capture area (this is what becomes the final image) -->
+        <div id="capture-area">
+            <!-- Background image layer -->
+            <img id="bgPreview" class="bg-image" src="" alt="Background">
+
+            <!-- Main content -->
+            <div class="card-layout">
+                <!-- Top row: image + main info -->
+                <div class="top-row">
+                    <!-- Left: PSA card image -->
+                    <div class="card-image-wrapper">
+                        <img id="cardPreview" src="" alt="PSA card preview (upload an image)">
+                    </div>
+
+                    <!-- Right: text details -->
+                    <div class="card-details">
+                        <div>
+                            <div class="card-header">
+                                <div class="brand">PSA MARKET SNAPSHOT</div>
+                                <div class="card-title" id="displayCardName">Card Name</div>
+                                <div class="card-sub" id="displayCardSet">Set / Year</div>
+                                <div class="card-sub" id="displayGrade">PSA Grade</div>
+                                <div class="rarity-line" id="displayRarity">Rarity</div>
+                            </div>
+
+                            <div class="price-block">
+                                <div class="price-label">LAST SOLD</div>
+                                <div class="price-value" id="displayPrice">$0.00</div>
+                                <div class="price-footer">
+                                    <span id="displayDate">—</span>
+                                    <span>USD • Verified Sale</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="footer-note">
+                            @kolektiblesx • PSA Price Chart
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom row: price trend chart -->
+                <div class="bottom-row">
+                    <div class="bottom-header">
+                        <div class="bottom-title">PRICE TREND</div>
+                        <div class="bottom-caption">Recent sales</div>
+                    </div>
+                    <div id="chartWrapper">
+                        <!-- Canvas with normal height; text will be visible -->
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay image layer -->
+            <img id="overlayPreview" class="overlay-image" src="" alt="Overlay">
+        </div>
+    </div>
+
+    <script>
+        // --- DOM elements ---
+        const cardNameInput = document.getElementById("cardName");
+        const cardSetInput = document.getElementById("cardSet");
+        const gradeInput = document.getElementById("grade");
+        const rarityInput = document.getElementById("rarity");
+        const priceInput = document.getElementById("price");
+        const dateInput = document.getElementById("dateSold");
+        const imageInput = document.getElementById("imageInput");
+        const bgInput = document.getElementById("bgInput");
+        const overlayInput = document.getElementById("overlayInput");
+        const downloadBtn = document.getElementById("downloadBtn");
+        const addPointBtn = document.getElementById("addPointBtn");
+        const trendRowsContainer = document.getElementById("trendRows");
+
+        const displayCardName = document.getElementById("displayCardName");
+        const displayCardSet = document.getElementById("displayCardSet");
+        const displayGrade = document.getElementById("displayGrade");
+        const displayRarity = document.getElementById("displayRarity");
+        const displayPrice = document.getElementById("displayPrice");
+        const displayDate = document.getElementById("displayDate");
+        const cardPreview = document.getElementById("cardPreview");
+        const bgPreview = document.getElementById("bgPreview");
+        const overlayPreview = document.getElementById("overlayPreview");
+
+        const chartCanvas = document.getElementById("priceChart");
+        const chartCtx = chartCanvas.getContext("2d");
+
+        // --- Live text bindings ---
+        cardNameInput.addEventListener("input", () => {
+            displayCardName.textContent = cardNameInput.value || "Card Name";
+        });
+
+        cardSetInput.addEventListener("input", () => {
+            displayCardSet.textContent = cardSetInput.value || "Set / Year";
+        });
+
+        gradeInput.addEventListener("input", () => {
+            displayGrade.textContent = gradeInput.value || "PSA Grade";
+        });
+
+        rarityInput.addEventListener("input", () => {
+            displayRarity.textContent = rarityInput.value || "Rarity";
+        });
+
+        priceInput.addEventListener("input", () => {
+            const val = priceInput.value;
+            if (!val) {
+                displayPrice.textContent = "$0.00";
+                return;
+            }
+            const num = Number(val);
+            if (!isNaN(num)) {
+                displayPrice.textContent = num.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                });
+            } else {
+                displayPrice.textContent = "$0.00";
+            }
+        });
+
+        dateInput.addEventListener("input", () => {
+            const val = dateInput.value;
+            if (!val) {
+                displayDate.textContent = "—";
+                return;
+            }
+            const d = new Date(val + "T00:00:00");
+            const formatted = formatDateShortForChart(d);
+            displayDate.textContent = formatted;
+        });
+
+        // --- Image upload preview: card ---
+        imageInput.addEventListener("change", () => {
+            const file = imageInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                cardPreview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- Image upload preview: background (BG) ---
+        bgInput.addEventListener("change", () => {
+            const file = bgInput.files[0];
+            if (!file) {
+                bgPreview.src = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                bgPreview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- Image upload preview: overlay (top) ---
+        overlayInput.addEventListener("change", () => {
+            const file = overlayInput.files[0];
+            if (!file) {
+                overlayPreview.src = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                overlayPreview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- Trend rows handling ---
+        function createTrendRow() {
+            const row = document.createElement("div");
+            row.className = "trend-row";
+
+            const dateInput = document.createElement("input");
+            dateInput.type = "date";
+
+            const priceInput = document.createElement("input");
+            priceInput.type = "number";
+            priceInput.step = "0.01";
+            priceInput.placeholder = "Price";
+
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.textContent = "✕";
+            removeBtn.title = "Remove row";
+
+            removeBtn.addEventListener("click", () => {
+                trendRowsContainer.removeChild(row);
+                updateChart();
+            });
+
+            dateInput.addEventListener("input", updateChart);
+            priceInput.addEventListener("input", updateChart);
+
+            row.appendChild(dateInput);
+            row.appendChild(priceInput);
+            row.appendChild(removeBtn);
+
+            return row;
+        }
+
+        function addInitialRows() {
+            // Start with 4 empty rows
+            for (let i = 0; i < 4; i++) {
+                trendRowsContainer.appendChild(createTrendRow());
+            }
+        }
+
+        addPointBtn.addEventListener("click", () => {
+            trendRowsContainer.appendChild(createTrendRow());
+        });
+
+        // --- Chart helpers ---
+        function getTrendData() {
+            const rows = Array.from(trendRowsContainer.querySelectorAll(".trend-row"));
+            const points = [];
+
+            for (const row of rows) {
+                const [dateEl, priceEl] = row.querySelectorAll("input");
+                const dVal = dateEl.value;
+                const pVal = priceEl.value;
+
+                if (!dVal || !pVal) continue;
+
+                const price = Number(pVal);
+                const date = new Date(dVal + "T00:00:00");
+                if (!isNaN(price) && !isNaN(date.getTime())) {
+                    points.push({ date, price });
+                }
+            }
+
+            // Sort by date ascending
+            points.sort((a, b) => a.date - b.date);
+            return points;
+        }
+
+        function formatDateShortForChart(date) {
+            const day = date.getDate();
+            const month = date.toLocaleString("en-GB", { month: "short" }); // Jan, Feb...
+            const year = String(date.getFullYear()).slice(-2); // 25
+            return `${day} ${month} '${year}`; // 1 Dec '25
+        }
+
+        function clearChart(message) {
+            const w = chartCanvas.width;
+            const h = chartCanvas.height;
+            chartCtx.clearRect(0, 0, w, h);
+
+            chartCtx.fillStyle = "#020617";
+            chartCtx.fillRect(0, 0, w, h);
+
+            chartCtx.fillStyle = "#6b7280";
+            chartCtx.font = "14px system-ui";
+            chartCtx.textAlign = "center";
+            chartCtx.textBaseline = "middle";
+            chartCtx.fillText(message, w / 2, h / 2);
+        }
+
+        function resizeChartCanvas() {
+            const wrapper = document.getElementById("chartWrapper");
+            if (!wrapper) return;
+
+            // visible size of the bottom-row chart area
+            const width = wrapper.clientWidth;
+            const height = wrapper.clientHeight;
+
+            if (width <= 0 || height <= 0) return;
+
+            // 🔑 internal resolution = visible size
+            chartCanvas.width = width;
+            chartCanvas.height = height;
+        }
+
+        function updateChart() {
+            resizeChartCanvas();
+            const data = getTrendData();
+            const w = chartCanvas.width;   // 540
+            const h = chartCanvas.height;  // 200
+
+            if (data.length < 2) {
+                clearChart("Add at least 2 data points");
+                return;
+            }
+
+            const prices = data.map(p => p.price);
+            let minPrice = Math.min(...prices);
+            let maxPrice = Math.max(...prices);
+
+            // Small vertical margin so line doesn't hug edges
+            const margin = (maxPrice - minPrice || minPrice || 1) * 0.08;
+            minPrice -= margin;
+            maxPrice += margin;
+
+            // Inner padding INSIDE the chart (tuned for 540x200)
+            const paddingLeft = 55;
+            const paddingRight = 30;
+            const paddingTop = 30;
+            const paddingBottom = 55; // extra space for dates
+
+            const chartWidth = w - paddingLeft - paddingRight;
+            const chartHeight = h - paddingTop - paddingBottom;
+            const n = data.length;
+
+            // Background
+            chartCtx.clearRect(0, 0, w, h);
+            chartCtx.fillStyle = "#020617";
+            chartCtx.fillRect(0, 0, w, h);
+
+            // Grid lines
+            chartCtx.strokeStyle = "#1f2937";
+            chartCtx.lineWidth = 1;
+            const gridLines = 4;
+            for (let i = 0; i <= gridLines; i++) {
+                const y = paddingTop + (chartHeight * i) / gridLines;
+                chartCtx.beginPath();
+                chartCtx.moveTo(paddingLeft, y);
+                chartCtx.lineTo(w - paddingRight, y);
+                chartCtx.stroke();
+            }
+
+            // Y-axis labels (min / max)
+            chartCtx.fillStyle = "#9ca3af";
+            chartCtx.font = "12px system-ui";
+            chartCtx.textAlign = "left";
+            chartCtx.textBaseline = "middle";
+            chartCtx.fillText(Math.round(maxPrice).toString(), 10, paddingTop + 3);
+            chartCtx.fillText(Math.round(minPrice).toString(), 10, paddingTop + chartHeight);
+
+            // Line
+            chartCtx.strokeStyle = "#22c55e";
+            chartCtx.lineWidth = 2;
+            chartCtx.beginPath();
+
+            data.forEach((point, index) => {
+                const x = paddingLeft + (chartWidth * index) / (n - 1);
+                const y =
+                    paddingTop +
+                    chartHeight -
+                    ((point.price - minPrice) / (maxPrice - minPrice)) * chartHeight;
+
+                if (index === 0) chartCtx.moveTo(x, y);
+                else chartCtx.lineTo(x, y);
+            });
+            chartCtx.stroke();
+
+            // Points
+            chartCtx.fillStyle = "#bbf7d0";
+            data.forEach((point, index) => {
+                const x = paddingLeft + (chartWidth * index) / (n - 1);
+                const y =
+                    paddingTop +
+                    chartHeight -
+                    ((point.price - minPrice) / (maxPrice - minPrice)) * chartHeight;
+
+                chartCtx.beginPath();
+                chartCtx.arc(x, y, 4, 0, Math.PI * 2);
+                chartCtx.fill();
+            });
+
+            // Price labels above each point
+            chartCtx.fillStyle = "#ffffff";
+            chartCtx.font = "15px system-ui";
+            chartCtx.textAlign = "center";
+            chartCtx.textBaseline = "bottom";
+
+            data.forEach((point, index) => {
+                const x = paddingLeft + (chartWidth * index) / (n - 1);
+                const y =
+                    paddingTop +
+                    chartHeight -
+                    ((point.price - minPrice) / (maxPrice - minPrice)) * chartHeight;
+
+                const rounded = Math.round(point.price);
+                const priceLabel = "$" + rounded.toLocaleString("en-US");
+                chartCtx.fillText(priceLabel, x, y - 6);
+            });
+
+            // Date labels under x-axis – format: 3 Dec '25
+            chartCtx.fillStyle = "#9ca3af";
+            chartCtx.font = "13px system-ui";
+            chartCtx.textAlign = "center";
+            chartCtx.textBaseline = "top";
+            const dateY = paddingTop + chartHeight + 8;
+
+            data.forEach((point, index) => {
+                const x = paddingLeft + (chartWidth * index) / (n - 1);
+                const label = formatDateShortForChart(point.date);
+                chartCtx.fillText(label, x, dateY);
+            });
+        }
+
+        // Init chart with message and rows
+        clearChart("Add at least 2 data points");
+        addInitialRows();
+        window.addEventListener("load", () => {
+            resizeChartCanvas();
+            clearChart("Add at least 2 data points");
+        });
+
+        window.addEventListener("resize", () => {
+            updateChart();
+        });
+
+
+        // --- Download capture-area as PNG (1080x1350) ---
+        downloadBtn.addEventListener("click", async () => {
+            const captureArea = document.getElementById("capture-area");
+
+            // Ensure the latest chart is drawn
+            updateChart();
+
+            setTimeout(async () => {
+                const canvas = await html2canvas(captureArea, {
+                    backgroundColor: null,
+                    scale: 2, // 540x675 * 2 = 1080x1350
+                });
+
+                const dataUrl = canvas.toDataURL("image/png");
+                const link = document.createElement("a");
+
+                const safeName = (cardNameInput.value || "psa-card")
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/^-+|-+$/g, "");
+
+                link.download = `${safeName || "psa-card"}-ig-price.png`;
+                link.href = dataUrl;
+                link.click();
+            }, 100);
+        });
+    </script>
+</body>
+
+</html>

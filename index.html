@@ -420,7 +420,6 @@
 
             <button class="btn" id="downloadBtn">Download as Image (PNG)</button>
             <small>©kevizen a.k.a Pakdhe Gimin</small>
-
         </div>
 
         <!-- Capture area (this is what becomes the final image) -->
@@ -551,9 +550,9 @@
                 return;
             }
             const d = new Date(val + "T00:00:00");
-            const formatted = formatDateShortForChart(d);
-            displayDate.textContent = formatted;
+            displayDate.textContent = formatMonthYear(d);
         });
+
 
         // --- Image upload preview: card ---
         imageInput.addEventListener("change", () => {
@@ -663,6 +662,12 @@
             // Sort by date ascending
             points.sort((a, b) => a.date - b.date);
             return points;
+        }
+
+        function formatMonthYear(date) {
+            const month = date.toLocaleString("en-GB", { month: "short" });
+            const year = String(date.getFullYear()).slice(-2);  // '25
+            return `${month} '${year}`;
         }
 
         function formatDateShortForChart(date) {
@@ -815,7 +820,7 @@
 
             data.forEach((point, index) => {
                 const x = paddingLeft + (chartWidth * index) / (n - 1);
-                const label = formatDateShortForChart(point.date);
+                const label = formatMonthYear(point.date);
                 chartCtx.fillText(label, x, dateY);
             });
         }
@@ -861,6 +866,5 @@
         });
     </script>
 </body>
-
 
 </html>

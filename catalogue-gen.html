@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>TCG Price Catalogue Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            background: radial-gradient(circle at top left, #1e293b 0, #020617 55%);
+            color: #e5e7eb;
+        }
+
+        .sidebar {
+            width: 420px;
+            padding: 20px 18px;
+            background: rgba(15, 23, 42, 0.97);
+            border-right: 1px solid #1f2937;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 18px;
+            letter-spacing: 0.03em;
+            font-weight: 600;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 6px;
+            margin-top: 18px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+        }
+
+        label {
+            font-size: 11px;
+            display: block;
+            margin-bottom: 4px;
+            color: #cbd5f5;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 6px 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid #1f2937;
+            background: #020617;
+            color: #e5e7eb;
+        }
+
+        input[type="file"] {
+            font-size: 11px;
+            margin-bottom: 4px;
+            width: 100%;
+            color: #e5e7eb;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 24px;
+            padding: 0;
+            border-radius: 999px;
+            border: 1px solid #1f2937;
+            background: #020617;
+            cursor: pointer;
+        }
+
+        select {
+            width: 100%;
+            padding: 6px 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid #1f2937;
+            background: #020617;
+            color: #e5e7eb;
+        }
+
+        .card-block {
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 10px 10px 8px;
+            margin-bottom: 10px;
+            background: radial-gradient(circle at top, rgba(30, 64, 175, 0.22), rgba(15, 23, 42, 0.96));
+        }
+
+        .card-block-title {
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: #38bdf8;
+            color: #0b1120;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button.secondary {
+            background: transparent;
+            border-color: #4b5563;
+            color: #e5e7eb;
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .tiny-btn {
+            padding: 3px 8px;
+            font-size: 10px;
+            border-radius: 999px;
+            border: 1px solid #ef4444;
+            background: transparent;
+            color: #fecaca;
+            margin-left: 6px;
+            white-space: nowrap;
+        }
+
+        .tiny-btn:hover {
+            background: rgba(248, 113, 113, 0.08);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        canvas {
+            background: #020617;
+            box-shadow: 0 0 25px rgba(15, 23, 42, 0.9);
+            border-radius: 18px;
+            border: 1px solid #1f2937;
+            /* Smaller preview, still exports 1080x1350 */
+            width: 540px;
+            height: 675px;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .color-row span {
+            font-size: 11px;
+            color: #cbd5f5;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Price Catalogue Generator</h2>
+
+        <h3>Global Settings</h3>
+        <label>Background image (1080×1350)</label>
+        <input type="file" id="bgInput" accept="image/*">
+
+        <label>Overlay image (frame / logo, drawn on top)</label>
+        <input type="file" id="overlayInput" accept="image/*">
+
+        <label>Card title and details font (TTF / OTF)</label>
+        <input type="file" id="fontInput" accept=".ttf,.otf">
+        <div class="hint">If not set, system font is used.</div>
+
+        <label>Price font (TTF / OTF)</label>
+        <input type="file" id="priceFontInput" accept=".ttf,.otf">
+
+        <div class="color-row">
+            <span>Info text color</span>
+            <input type="color" id="infoColor" value="#FFFFFF">
+        </div>
+        <div class="color-row">
+            <span>Price text color</span>
+            <input type="color" id="priceColor" value="#FFFFFF">
+        </div>
+
+        <div class="buttons">
+            <button id="renderBtn" class="secondary">Render now</button>
+            <button id="downloadBtn">Download PNG</button>
+        </div>
+
+        <h3>Cards (max 8)</h3>
+        <div class="hint">Only filled cards will be drawn. Layout auto-centers. Use column span for wide merged cards.
+        </div>
+
+        <div id="cardsContainer"></div>
+    </div>
+
+    <div class="main">
+        <canvas id="catalogueCanvas" width="1080" height="1350"></canvas>
+    </div>
+
+    <script>
+        const MAX_CARDS = 8;
+        const MAX_SLABS_PER_CARD = 3;
+
+        const canvas = document.getElementById('catalogueCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const bgInput = document.getElementById('bgInput');
+        const overlayInput = document.getElementById('overlayInput');
+        const fontInput = document.getElementById('fontInput');
+        const priceFontInput = document.getElementById('priceFontInput');
+        const infoColorInput = document.getElementById('infoColor');
+        const priceColorInput = document.getElementById('priceColor');
+        const renderBtn = document.getElementById('renderBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const cardsContainer = document.getElementById('cardsContainer');
+
+        let backgroundImage = null;
+        let overlayImage = null;
+
+        // Up to 3 slabs per card
+        let cardImages = Array.from({ length: MAX_CARDS }, () =>
+            new Array(MAX_SLABS_PER_CARD).fill(null)
+        );
+
+        // Column span per card: 1–3
+        let cardSpan = new Array(MAX_CARDS).fill(1);
+
+        // Fonts
+        let customFontName = null;          // for name + rarity + grade
+        let customPriceFontName = null;     // for price only
+
+        let textFontLoadedPromise = Promise.resolve();
+        let priceFontLoadedPromise = Promise.resolve();
+
+        let infoTextColor = '#FFFFFF';
+        let priceTextColor = '#FFFFFF';
+
+        let renderTimeout = null;
+
+        // ---------- Helpers ----------
+
+        function loadImageFromFile(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve(null);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function scheduleRender() {
+            if (renderTimeout) clearTimeout(renderTimeout);
+            renderTimeout = setTimeout(async () => {
+                await Promise.all([textFontLoadedPromise, priceFontLoadedPromise]);
+                await renderCatalogue();
+            }, 120);
+        }
+
+        function loadFontFromFile(file, familyName, setNameCallback) {
+            if (!file) {
+                setNameCallback(null);
+                return Promise.resolve();
+            }
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        const font = new FontFace(familyName, `url(${e.target.result})`);
+                        font.load().then(loaded => {
+                            document.fonts.add(loaded);
+                            setNameCallback(familyName);
+                            resolve();
+                        }).catch(reject);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            const radius = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + w - radius, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+            ctx.lineTo(x + w, y + h - radius);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+            ctx.lineTo(x + radius, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function drawImageCover(ctx, img, x, y, w, h) {
+            if (!img) return;
+            const imgRatio = img.width / img.height;
+            const boxRatio = w / h;
+            let drawWidth, drawHeight, dx, dy;
+            if (imgRatio > boxRatio) {
+                drawHeight = h;
+                drawWidth = h * imgRatio;
+            } else {
+                drawWidth = w;
+                drawHeight = w / imgRatio;
+            }
+            dx = x + (w - drawWidth) / 2;
+            dy = y + (h - drawHeight) / 2;
+            ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
+        }
+
+        function drawImageContain(ctx, img, x, y, w, h) {
+            if (!img) return;
+            const imgRatio = img.width / img.height;
+            const boxRatio = w / h;
+            let drawWidth, drawHeight, dx, dy;
+            if (imgRatio > boxRatio) {
+                drawWidth = w;
+                drawHeight = w / imgRatio;
+            } else {
+                drawHeight = h;
+                drawWidth = h * imgRatio;
+            }
+            dx = x + (w - drawWidth) / 2;
+            dy = y + (h - drawHeight) / 2;
+            ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
+        }
+
+        // Draw 1–3 slabs, each with the SAME width (like a normal single card),
+        // centered as a group around centerX.
+        function drawMergedSlabs(ctx, slabImages, centerX, y, eachW, h, gap, radius) {
+            const imgs = slabImages.filter(Boolean);
+            const n = imgs.length;
+            if (n === 0) return;
+
+            const totalWidth = n * eachW + (n - 1) * gap;
+            let startX = centerX - totalWidth / 2;
+
+            for (let i = 0; i < n; i++) {
+                const sx = startX + i * (eachW + gap);
+                const sy = y;
+
+                ctx.save();
+                roundRect(ctx, sx, sy, eachW, h, radius);
+                ctx.clip();
+                drawImageContain(ctx, imgs[i], sx, sy, eachW, h);
+                ctx.restore();
+            }
+        }
+
+
+        // ---------- UI setup for cards ----------
+
+        function createCardControls(index) {
+            const block = document.createElement('div');
+            block.className = 'card-block';
+
+            const title = document.createElement('div');
+            title.className = 'card-block-title';
+            title.textContent = `Card ${index + 1}`;
+            block.appendChild(title);
+
+            const imgLabel = document.createElement('label');
+            imgLabel.textContent = 'PSA slabs for this card (1–3)';
+            block.appendChild(imgLabel);
+
+            const slabRow = document.createElement('div');
+            slabRow.className = 'file-row';
+
+            for (let s = 0; s < MAX_SLABS_PER_CARD; s++) {
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+                wrapper.style.gap = '2px';
+
+                const smallLabel = document.createElement('span');
+                smallLabel.style.fontSize = '10px';
+                smallLabel.style.color = '#9ca3af';
+                smallLabel.textContent = `Slab ${s + 1}`;
+                wrapper.appendChild(smallLabel);
+
+                const imgInput = document.createElement('input');
+                imgInput.type = 'file';
+                imgInput.accept = 'image/*';
+                imgInput.style.width = '140px';
+                imgInput.id = `cardImage-${index}-${s}`;
+                imgInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    cardImages[index][s] = await loadImageFromFile(file);
+                    scheduleRender();
+                });
+                wrapper.appendChild(imgInput);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = 'Clear';
+                removeBtn.className = 'tiny-btn';
+                removeBtn.style.marginLeft = '0';
+                removeBtn.addEventListener('click', () => {
+                    cardImages[index][s] = null;
+                    imgInput.value = '';
+                    scheduleRender();
+                });
+                wrapper.appendChild(removeBtn);
+
+                slabRow.appendChild(wrapper);
+            }
+
+            block.appendChild(slabRow);
+
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = 'Card name';
+            block.appendChild(nameLabel);
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.id = `cardName-${index}`;
+            nameInput.addEventListener('input', scheduleRender);
+            block.appendChild(nameInput);
+
+            const rarityLabel = document.createElement('label');
+            rarityLabel.textContent = 'Rarity';
+            block.appendChild(rarityLabel);
+
+            const rarityInput = document.createElement('input');
+            rarityInput.type = 'text';
+            rarityInput.id = `cardRarity-${index}`;
+            rarityInput.addEventListener('input', scheduleRender);
+            block.appendChild(rarityInput);
+
+            const gradeLabel = document.createElement('label');
+            gradeLabel.textContent = 'Grade';
+            block.appendChild(gradeLabel);
+
+            const gradeInput = document.createElement('input');
+            gradeInput.type = 'text';
+            gradeInput.id = `cardGrade-${index}`;
+            gradeInput.addEventListener('input', scheduleRender);
+            block.appendChild(gradeInput);
+
+            const priceLabel = document.createElement('label');
+            priceLabel.textContent = 'Price (e.g. IDR 9.000K)';
+            block.appendChild(priceLabel);
+
+            const priceInput = document.createElement('input');
+            priceInput.type = 'text';
+            priceInput.id = `cardPrice-${index}`;
+            priceInput.addEventListener('input', scheduleRender);
+            block.appendChild(priceInput);
+
+            const spanLabel = document.createElement('label');
+            spanLabel.textContent = 'Column span';
+            block.appendChild(spanLabel);
+
+            const spanSelect = document.createElement('select');
+            spanSelect.id = `cardSpan-${index}`;
+            [1, 2, 3].forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = `${v} column${v > 1 ? 's' : ''}`;
+                spanSelect.appendChild(opt);
+            });
+            spanSelect.value = cardSpan[index];
+            spanSelect.addEventListener('change', (e) => {
+                cardSpan[index] = Math.max(1, Math.min(3, parseInt(e.target.value, 10) || 1));
+                scheduleRender();
+            });
+            block.appendChild(spanSelect);
+
+            return block;
+        }
+
+        for (let i = 0; i < MAX_CARDS; i++) {
+            cardsContainer.appendChild(createCardControls(i));
+        }
+
+        // ---------- Event handlers ----------
+
+        bgInput.addEventListener('change', async (e) => {
+            backgroundImage = await loadImageFromFile(e.target.files[0]);
+            scheduleRender();
+        });
+
+        overlayInput.addEventListener('change', async (e) => {
+            overlayImage = await loadImageFromFile(e.target.files[0]);
+            scheduleRender();
+        });
+
+        fontInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                textFontLoadedPromise = loadFontFromFile(
+                    file,
+                    'CustomTCGFont',
+                    (name) => { customFontName = name; }
+                ).catch(() => { customFontName = null; })
+                    .finally(scheduleRender);
+            } else {
+                customFontName = null;
+                textFontLoadedPromise = Promise.resolve();
+                scheduleRender();
+            }
+        });
+
+        priceFontInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                priceFontLoadedPromise = loadFontFromFile(
+                    file,
+                    'CustomPriceFont',
+                    (name) => { customPriceFontName = name; }
+                ).catch(() => { customPriceFontName = null; })
+                    .finally(scheduleRender);
+            } else {
+                customPriceFontName = null;
+                priceFontLoadedPromise = Promise.resolve();
+                scheduleRender();
+            }
+        });
+
+        infoColorInput.addEventListener('input', (e) => {
+            infoTextColor = e.target.value || '#FFFFFF';
+            scheduleRender();
+        });
+
+        priceColorInput.addEventListener('input', (e) => {
+            priceTextColor = e.target.value || '#FFFFFF';
+            scheduleRender();
+        });
+
+        renderBtn.addEventListener('click', () => {
+            scheduleRender();
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'price_catalogue.png';
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // ---------- Core rendering ----------
+
+        async function renderCatalogue() {
+            const W = canvas.width;
+            const H = canvas.height;
+
+            // Background
+            if (backgroundImage) {
+                drawImageCover(ctx, backgroundImage, 0, 0, W, H);
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Determine which cards are actually used (at least one slab)
+            const usedIndices = [];
+            for (let i = 0; i < MAX_CARDS; i++) {
+                if (cardImages[i].some(img => img)) {
+                    usedIndices.push(i);
+                }
+            }
+
+            const nCards = usedIndices.length;
+
+            if (nCards === 0) {
+                if (overlayImage) {
+                    drawImageContain(ctx, overlayImage, 0, 0, W, H);
+                }
+                return;
+            }
+
+            // Layout
+            const gapX = 28;
+            const gapY = 40;
+            const sideMargin = 40;
+            const topPadding = 140;
+            const maxCols = 4;
+            const maxRows = 2;
+
+            const totalAvailableH = H - topPadding * 2;
+            const baseCardHeight = (totalAvailableH - gapY) / 2;
+            const cardHeight = baseCardHeight * 0.96;
+
+            const baseCardWidth = (W - sideMargin * 2 - gapX * (maxCols - 1)) / maxCols;
+            const cardRadius = 26;
+            const innerPadding = 24;
+
+            // Build rows with span support
+            const rows = [];
+            let rowIndex = 0;
+            rows[0] = { cards: [], spanTotal: 0 };
+
+            for (let k = 0; k < nCards; k++) {
+                const idx = usedIndices[k];
+                let span = cardSpan[idx] || 1;
+                span = Math.max(1, Math.min(3, span)); // clamp 1–3
+
+                let row = rows[rowIndex];
+                if (!row) {
+                    row = rows[rowIndex] = { cards: [], spanTotal: 0 };
+                }
+
+                // If it doesn't fit in this row, wrap to next row
+                if (row.spanTotal + span > maxCols) {
+                    rowIndex++;
+                    if (rowIndex >= maxRows) break; // ignore overflow
+                    row = rows[rowIndex] = { cards: [], spanTotal: 0 };
+                }
+
+                row.cards.push({ cardIndex: idx, span });
+                row.spanTotal += span;
+            }
+
+            const existingRows = rows.filter(r => r && r.cards.length > 0);
+            const rowsUsed = existingRows.length;
+
+            if (rowsUsed === 0) {
+                if (overlayImage) {
+                    drawImageContain(ctx, overlayImage, 0, 0, W, H);
+                }
+                return;
+            }
+
+            const totalHeight =
+                rowsUsed * cardHeight + (rowsUsed - 1) * gapY;
+            const topY = (H - totalHeight) / 2;
+
+            const slots = [];
+
+            rows.forEach((row, rIdx) => {
+                if (!row || row.cards.length === 0) return;
+
+                const rowY = topY + rIdx * (cardHeight + gapY);
+
+                // Center row horizontally based on total span
+                const offsetCols = (maxCols - row.spanTotal) / 2;
+                let colCursor = offsetCols;
+
+                for (const item of row.cards) {
+                    const span = item.span;
+
+                    const x = sideMargin + colCursor * (baseCardWidth + gapX);
+                    const w = span * baseCardWidth + (span - 1) * gapX;
+
+                    slots.push({
+                        cardIndex: item.cardIndex,
+                        x,
+                        y: rowY,
+                        cardWidth: w
+                    });
+
+                    // move logical cursor by span columns
+                    colCursor += span;
+                }
+            });
+
+
+            const infoFontBaseName = customFontName || 'Arial';
+            const priceFontBaseName = customPriceFontName || infoFontBaseName; // fallback
+
+            const nameFontSize = 22;
+            const metaFontSize = 16;
+            const priceFontSize = 28;
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Draw cards
+            for (const slot of slots) {
+                const i = slot.cardIndex;
+                const x = slot.x;
+                const y = slot.y;
+                const thisCardWidth = slot.cardWidth;
+
+                // Card container (border only) – still expands with span
+                roundRect(ctx, x, y, thisCardWidth, cardHeight, cardRadius);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#d0d0d0';
+                ctx.stroke();
+
+                // --- fixed-size content geometry (ALWAYS like 1-column card) ---
+                const singleContentWidth = baseCardWidth;                    // width of a 1-column card
+                const singleInnerW = singleContentWidth - innerPadding * 2;
+
+                const innerY = y + innerPadding;
+                const innerH = cardHeight - innerPadding * 2;
+
+                const imgH = innerH * 0.80;
+                const imgY = innerY - 24;
+
+                const centerX = x + thisCardWidth / 2;                       // center of the big card
+                const slabGap = 16;                                          // gap between slabs
+
+                // slabs will always be "single card" size, even in 2–3 column sets
+                drawMergedSlabs(ctx, cardImages[i], centerX, imgY, singleInnerW, imgH, slabGap, 22);
+
+                // Text area below the slabs
+                let textY = innerY + imgH - 24;
+
+                const nameText = document.getElementById(`cardName-${i}`).value || '';
+                const rarityText = document.getElementById(`cardRarity-${i}`).value || '';
+                const gradeText = document.getElementById(`cardGrade-${i}`).value || '';
+                const priceText = document.getElementById(`cardPrice-${i}`).value || '';
+
+                if (nameText) {
+                    ctx.font = `${nameFontSize}px "${infoFontBaseName}"`;
+                    ctx.fillStyle = infoTextColor;
+                    ctx.fillText(nameText, centerX, textY);
+                    textY += nameFontSize + 10;
+                }
+
+                const metaLine = [rarityText, gradeText].filter(Boolean).join(' - ');
+                if (metaLine) {
+                    ctx.font = `${metaFontSize}px "${infoFontBaseName}"`;
+                    ctx.fillStyle = infoTextColor;
+                    ctx.fillText(metaLine, centerX, textY);
+                    textY += metaFontSize + 10;
+                }
+
+                if (priceText) {
+                    ctx.font = `bold ${priceFontSize}px "${priceFontBaseName}"`;
+                    ctx.fillStyle = priceTextColor;
+                    ctx.fillText(priceText, centerX, textY + 10);
+                }
+            }
+
+            if (overlayImage) {
+                drawImageContain(ctx, overlayImage, 0, 0, W, H);
+            }
+        }
+
+        // Initial render
+        renderCatalogue();
+    </script>
+</body>
+
+</html>
